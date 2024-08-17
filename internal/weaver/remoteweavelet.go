@@ -305,6 +305,7 @@ func NewRemoteWeavelet(ctx context.Context, regs []*codegen.Registration, bootst
 				}
 			}
 		}
+		w.logDst.flush(ctx, w.deployer.LogBatch)
 		os.Exit(1)
 	}()
 
@@ -796,6 +797,7 @@ func (w *RemoteWeavelet) logger(name string, attrs ...string) *slog.Logger {
 			Component:  name,
 			Weavelet:   w.Info().Id,
 			Attrs:      attrs,
+			LogLevel:   slog.Level(w.args.LogLevel),
 		},
 		Write: w.logDst.log,
 	})

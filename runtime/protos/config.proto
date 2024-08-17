@@ -80,6 +80,8 @@ message AppConfig {
   // All config sections (includes [serviceweaver], [<deployer>], and
   // [<component>] sections).
   map<string, string> sections = 7;
+
+  int32 log_level = 8;
 }
 
 // Deployment holds internal information necessary for an application

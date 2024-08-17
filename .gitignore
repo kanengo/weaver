@@ -6,6 +6,7 @@ examples/factors/factors
 examples/hello/hello
 examples/helloworld/helloworld
 website/public/
+.idea/
 
 # Binaries produced by [go test] when passed -c or a profiling option.
 *.test

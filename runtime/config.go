@@ -16,6 +16,7 @@ package runtime
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -109,6 +110,7 @@ func extractApp(file string, config *protos.AppConfig) error {
 		Env      []string
 		Colocate [][]string
 		Rollout  time.Duration
+		LogLevel string
 	}
 
 	parsed := &appConfig{}
@@ -125,6 +127,12 @@ func extractApp(file string, config *protos.AppConfig) error {
 	for _, colocate := range parsed.Colocate {
 		group := &protos.ComponentGroup{Components: colocate}
 		config.Colocate = append(config.Colocate, group)
+	}
+
+	if logLevel, err := parseLogLevel(parsed.LogLevel); err != nil {
+		return err
+	} else {
+		config.LogLevel = logLevel
 	}
 
 	// Canonicalize the config.
@@ -178,4 +186,25 @@ func checkSameProcess(c *protos.AppConfig) error {
 		}
 	}
 	return nil
+}
+
+func parseLogLevel(logLevel string) (int32, error) {
+	cl := logLevel
+	l := slog.LevelInfo
+	logLevel = strings.ToLower(logLevel)
+	switch logLevel {
+	case "debug":
+		l = slog.LevelDebug
+	case "info", "":
+	case "warn", "warning":
+		l = slog.LevelWarn
+	case "error":
+		l = slog.LevelError
+	case "fatal":
+		l = slog.LevelError + 1
+	default:
+		return 0, fmt.Errorf("invalid log level: %q", cl)
+	}
+
+	return int32(l), nil
 }

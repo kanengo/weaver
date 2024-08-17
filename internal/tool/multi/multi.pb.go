@@ -16,7 +16,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.21.12
-// source: internal/tool/multi/multi.proto
+// source: internal/tool/multi/standalone.proto
 
 package multi
 

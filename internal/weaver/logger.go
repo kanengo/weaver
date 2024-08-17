@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync/atomic"
 
 	"github.com/ServiceWeaver/weaver/runtime/logging"
 	"github.com/ServiceWeaver/weaver/runtime/protos"
@@ -29,6 +30,10 @@ type remoteLogger struct {
 	c        chan *protos.LogEntry
 	fallback io.Writer              // Fallback destination when dst() returns an error
 	pp       *logging.PrettyPrinter // Used when sending to dst fails
+	batch    *protos.LogEntryBatch
+
+	flushC atomic.Bool
+	done   chan struct{}
 }
 
 const logBufferCount = 1000
@@ -38,6 +43,8 @@ func newRemoteLogger(fallback io.Writer) *remoteLogger {
 		c:        make(chan *protos.LogEntry, logBufferCount),
 		fallback: fallback,
 		pp:       logging.NewPrettyPrinter(false),
+		batch:    &protos.LogEntryBatch{},
+		done:     make(chan struct{}),
 	}
 	return rl
 }
@@ -51,36 +58,44 @@ func (rl *remoteLogger) log(entry *protos.LogEntry) {
 // most one call to dst is outstanding at a time. Log entries that arrive while
 // a call is in progress are buffered and sent in the next call.
 func (rl *remoteLogger) run(ctx context.Context, dst func(context.Context, *protos.LogEntryBatch) error) {
-	batch := &protos.LogEntryBatch{}
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case e := <-rl.c:
 			// Batch together all available entries.
-			batch.Entries = append(batch.Entries, e)
+			rl.batch.Entries = append(rl.batch.Entries, e)
 		readloop:
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case e := <-rl.c:
-					batch.Entries = append(batch.Entries, e)
+					rl.batch.Entries = append(rl.batch.Entries, e)
 				default:
 					break readloop
 				}
 			}
 
 			// Send this batch
-			if err := dst(ctx, batch); err != nil {
+			if err := dst(ctx, rl.batch); err != nil {
 				// Fallback by writing to rl.fallback.
 				attr := err.Error()
-				for _, e := range batch.Entries {
+				for _, e := range rl.batch.Entries {
 					e.Attrs = append(e.Attrs, "serviceweaver/logerror", attr)
-					fmt.Fprintln(rl.fallback, rl.pp.Format(e))
+					_, _ = fmt.Fprintln(rl.fallback, rl.pp.Format(e))
 				}
 			}
-			batch.Entries = batch.Entries[:0]
+			rl.batch.Entries = rl.batch.Entries[:0]
+			if rl.flushC.Load() {
+				rl.done <- struct{}{}
+				return
+			}
 		}
 	}
+}
+
+func (rl *remoteLogger) flush(ctx context.Context, dst func(context.Context, *protos.LogEntryBatch) error) {
+	rl.flushC.Store(true)
+	<-rl.done
 }
