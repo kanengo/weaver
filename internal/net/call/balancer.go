@@ -14,6 +14,8 @@
 
 package call
 
+import "context"
+
 // ReplicaConnection is a connection to a single replica. A single Connection
 // may consist of many ReplicaConnections (typically one per replica).
 type ReplicaConnection interface {
@@ -40,6 +42,13 @@ type Balancer interface {
 	// Pick returns _,false if no connections are available.
 	Pick(CallOptions) (ReplicaConnection, bool)
 }
+
+type DoneInfo struct {
+	// Response Error
+	Err error
+}
+
+type DoneFunc func(ctx context.Context, di DoneInfo)
 
 // balancerFuncImpl is the implementation of the "functional" balancer
 // returned by BalancerFunc.
