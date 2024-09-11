@@ -52,6 +52,8 @@ import (
 // clients to check if a component is ready.
 const readyMethodName = "ready"
 
+const appLogLevel = "WEAVER_APP_LOG_LEVEL"
+
 // RemoteWeaveletOptions configure a RemoteWeavelet.
 type RemoteWeaveletOptions struct {
 	Fakes         map[reflect.Type]any // component fakes, by component interface type
@@ -790,6 +792,20 @@ func (w *RemoteWeavelet) getDeployerControl() (control.DeployerControl, error) {
 // logger returns a logger for the component with the provided name. The
 // returned logger includes the provided attributes.
 func (w *RemoteWeavelet) logger(name string, attrs ...string) *slog.Logger {
+	logLevel := slog.LevelDebug
+	fromEvn := false
+	if envLogLevel := os.Getenv(appLogLevel); envLogLevel != "" {
+		ll, err := runtime.ParseLogLevel(envLogLevel)
+		if err == nil {
+			logLevel = slog.Level(ll)
+			fromEvn = true
+		}
+	}
+
+	if !fromEvn {
+		logLevel = slog.Level(w.args.LogLevel)
+	}
+
 	return slog.New(&logging.LogHandler{
 		Opts: logging.Options{
 			App:        w.Info().App,
@@ -797,7 +813,7 @@ func (w *RemoteWeavelet) logger(name string, attrs ...string) *slog.Logger {
 			Component:  name,
 			Weavelet:   w.Info().Id,
 			Attrs:      attrs,
-			LogLevel:   slog.Level(w.args.LogLevel),
+			LogLevel:   logLevel,
 		},
 		Write: w.logDst.log,
 	})

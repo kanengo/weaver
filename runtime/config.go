@@ -129,7 +129,7 @@ func extractApp(file string, config *protos.AppConfig) error {
 		config.Colocate = append(config.Colocate, group)
 	}
 
-	if logLevel, err := parseLogLevel(parsed.LogLevel); err != nil {
+	if logLevel, err := ParseLogLevel(parsed.LogLevel); err != nil {
 		return err
 	} else {
 		config.LogLevel = logLevel
@@ -188,7 +188,7 @@ func checkSameProcess(c *protos.AppConfig) error {
 	return nil
 }
 
-func parseLogLevel(logLevel string) (int32, error) {
+func ParseLogLevel(logLevel string) (int32, error) {
 	cl := logLevel
 	l := slog.LevelInfo
 	logLevel = strings.ToLower(logLevel)
