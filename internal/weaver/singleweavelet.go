@@ -360,12 +360,21 @@ func (w *SingleWeavelet) logger(name string) *slog.Logger {
 		}
 		fmt.Fprintln(os.Stderr, msg)
 	}
+	logLevel := slog.LevelDebug
+	if envLogLevel := os.Getenv(appLogLevel); envLogLevel != "" {
+		ll, err := runtime.ParseLogLevel(envLogLevel)
+		if err == nil {
+			logLevel = slog.Level(ll)
+		}
+	}
+
 	return slog.New(&logging.LogHandler{
 		Opts: logging.Options{
 			App:        w.config.App.Name,
 			Deployment: w.deploymentId,
 			Component:  name,
 			Weavelet:   w.id,
+			LogLevel:   logLevel,
 		},
 		Write: write,
 	})
