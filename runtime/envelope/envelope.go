@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/ServiceWeaver/weaver/internal/base"
 	"io"
 	"log/slog"
 	"net"
@@ -388,7 +389,7 @@ func (e *Envelope) logLines(component string, src io.Reader, h EnvelopeHandler) 
 		line, err := rdr.ReadBytes('\n')
 		// Note: both line and err may be present.
 		if len(line) > 0 {
-			entry.Msg = string(dropNewline(line))
+			entry.Msg = base.BytesToReadOnlyString(dropNewline(line))
 			entry.TimeMicros = 0 // In case previous LogBatch mutated it
 			if err := h.LogBatch(e.ctx, batch); err != nil {
 				return err
