@@ -289,7 +289,7 @@ func (e *Envelope) Serve(h EnvelopeHandler) error {
 	})
 
 	running.Wait()
-
+	slog.Info("[envelope] wait child to finish")
 	// Wait for the weavelet command to finish. This needs to be done after
 	// we're done reading from stdout/stderr pipes, per comments on
 	// exec.Cmd.StdoutPipe and exec.Cmd.StderrPipe.
