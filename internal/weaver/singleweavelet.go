@@ -293,6 +293,8 @@ func (w *SingleWeavelet) get(reg *codegen.Registration) (any, error) {
 		return nil, err
 	}
 
+	SetTracer(obj, w.tracer)
+
 	// Set application runtime information.
 	if err := SetWeaverInfo(obj, w.weaverInfo); err != nil {
 		return nil, err

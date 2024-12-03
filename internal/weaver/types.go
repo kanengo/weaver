@@ -15,6 +15,7 @@
 package weaver
 
 import (
+	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 	"net"
 	"reflect"
@@ -59,6 +60,8 @@ var (
 	// GetConfig returns the config stored in the provided component
 	// implementation, or returns nil if there is no config.
 	GetConfig func(impl any) any
+
+	SetTracer func(impl any, tracer trace.Tracer)
 )
 
 // Copy of the same struct in the main weaver package.

@@ -264,6 +264,8 @@ type Implements[T any] struct {
 	// implement the Unrouted interface by default but implement the
 	// RoutedBy[T] interface when they embed WithRouter[T].
 	implementsImpl
+
+	tracer trace.Tracer
 }
 
 // Logger returns a logger that associates its log entries with this component.
@@ -292,6 +294,10 @@ func (i Implements[T]) Weaver() WeaverInfo {
 
 func (i *Implements[T]) setWeaverInfo(info *weaver.WeaverInfo) {
 	i.weaverInfo = info
+}
+
+func (i *Implements[T]) setTracer(tracer trace.Tracer) {
+	i.tracer = tracer
 }
 
 // implements is a method that can only be implemented inside the weaver

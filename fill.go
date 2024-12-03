@@ -16,6 +16,7 @@ package weaver
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel/trace"
 	"log/slog"
 	"net"
 	"reflect"
@@ -34,6 +35,14 @@ func init() {
 	weaver.FillListeners = fillListeners
 	weaver.HasConfig = hasConfig
 	weaver.GetConfig = getConfig
+	weaver.SetTracer = setTracer
+}
+
+func setTracer(v any, tracer trace.Tracer) {
+	x, ok := v.(interface{ setTracer(trace.Tracer) })
+	if ok {
+		x.setTracer(tracer)
+	}
 }
 
 // See internal/weaver/types.go.

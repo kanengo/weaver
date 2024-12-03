@@ -480,6 +480,8 @@ func (w *RemoteWeavelet) createComponent(ctx context.Context, reg *codegen.Regis
 		return nil, err
 	}
 
+	SetTracer(obj, w.tracer)
+
 	// Set application runtime information.
 	if err := SetWeaverInfo(obj, w.weaverInfo); err != nil {
 		return nil, err
