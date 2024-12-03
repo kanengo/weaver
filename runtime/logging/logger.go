@@ -223,7 +223,7 @@ func appendAttrs(prefix []string, attrs []slog.Attr) []string {
 	// loggers overwrite the existing slice entry. This is possible,
 	// for example, if two goroutines call With() on the same logger
 	// concurrently.
-	dst := make([]string, len(prefix)+len(attrs)*2)
+	dst := make([]string, 0, len(prefix)+len(attrs)*2)
 	dst = append(dst, prefix...)
 
 	// Extract key,value pairs from attrs.
